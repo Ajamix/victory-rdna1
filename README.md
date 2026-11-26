@@ -7,27 +7,27 @@ expects to have.
 **No game files are in here.** You need your own copy of the game. We're not affiliated with the game's developer or
 publisher.
 
-## Our best run: run 103
+## Results on the two PCs we tested
 
-| | |
-|---|---|
-| Frame rate in the world | **6.6 fps median, 7.3 fps at the top 10%**, ~141 ms a frame (406 samples) |
-| Console profile | Xbox Series S (`-Console series-s`). Series X gives 1-2 fps on this card |
-| Settings that made it | `VICTORY_LOOKUP_CACHE=1` (147.5 vs 158.1 ms) and `VICTORY_HEAP_SYNC_CUT=1` (141 vs 147.5 ms), both on by default now |
+Both run the Xbox Series S profile (`--console series-s`) with the [run settings](#run-settings) below. The console runs
+this game at 30 fps, so it's playable, just slowly. Frame rates are measured in the world (more than 2,500 draws a frame),
+after the shader cache has been built.
 
-The same code on a friend's PC with a newer card that has mesh shaders runs at 9-11 fps walking and 12-15 fps at its
-best.
+| | Our PC | Friend's PC |
+|---|---|---|
+| CPU | AMD Ryzen 5 3600 (6 cores / 12 threads) | AMD Ryzen 7 9800X3D (8 cores) |
+| GPU | AMD Radeon RX 5700 XT (RDNA1), driver 32.0.21043.12001 | NVIDIA GeForce RTX 5070 Ti, driver 32.0.16.2124 |
+| Mesh shaders / barycentrics | no / no (both worked around) | yes / yes |
+| RAM | 32 GB (2 sticks), 3200 MT/s | 32 GB |
+| OS | Windows 11 Pro (build 26200) | Windows 11 Pro (build 26300) |
+| **Frame rate** | **6.6 fps median, 7.3 fps top 10%** (~141 ms a frame, run 103) | **8.6 fps average, up to 12-13 fps** in some areas (3,000-4,000 draws a frame) |
+| Picture | full world | okay-ish |
 
-For reference, the console runs this game at 30 fps. So it's playable, but slowly.
+Run 103's two speed-ups, `VICTORY_LOOKUP_CACHE=1` (158 → 147.5 ms) and `VICTORY_HEAP_SYNC_CUT=1` (147.5 → 141 ms),
+took our PC from 158 to 141 ms a frame. On the friend's PC they raised the in-world average from 7.5 to 8.6 fps (+15%).
 
-## Our PC
-
-| | |
-|---|---|
-| CPU | AMD Ryzen 5 3600 (6 cores / 12 threads) |
-| GPU | AMD Radeon RX 5700 XT (RDNA1), driver 32.0.21043.12001 |
-| RAM | 32 GB (2 sticks), 3200 MT/s |
-| OS | Windows 11 Pro (build 26200) |
+On a new install, the first run is **black for several minutes** while the shader pipelines compile. That's normal.
+Leave it running, close it, and start it again.
 
 ## What we did
 
@@ -56,6 +56,25 @@ cargo build --release -p victory      # -> target\release\victory.exe
 
 See `victory.example.toml` for the config and `docs/` for more. `docs/UPSTREAM-FORK-README.md` is the README of the
 fork this one builds on.
+
+## Run settings
+
+The exe turns none of its speed switches on by itself. Set these environment variables before starting it:
+
+```
+VICTORY_TEXTURE_NO_WAIT=1  VICTORY_RELAY=2  VICTORY_JOIN_COPIES=1
+VICTORY_ASYNC_SUBMIT=1  VICTORY_QUEUE2=1  VICTORY_INDIRECT_WINDOW=1  VICTORY_COPY_PLAIN=1
+VICTORY_LEVELS_ON_DEMAND=1  VICTORY_MERGE_GAP=64  VICTORY_MERGE_RUNS=4096  VICTORY_STAGING_POOL=0
+VICTORY_JOIN_PARTS=1  VICTORY_BACK_OWN_VIEW=1  VICTORY_INDIRECT_GATHER=1  VICTORY_CARD_REHASH_RUNS=1
+VICTORY_CARD_BUFFERS_MIN_KB=64  VICTORY_CARD_BUFFERS_MB=1280  VICTORY_CARD_HASH_LEN=1
+VICTORY_BACK_PRIVATE=1  VICTORY_ABSENT_KEEP=1  VICTORY_CARD_HASH_WIDE=1  VICTORY_CARD_CHANGED_LIST=1
+VICTORY_HEAP_PASS_EVERY=1          # 4 blacked out the picture on an RTX 5070 Ti
+VICTORY_LOOKUP_CACHE=1  VICTORY_HEAP_SYNC_CUT=1   # run 103
+VICTORY_UPSCALER=plain  VICTORY_IDLE_LISTS=32
+VICTORY_FRAME_LOG=1  VICTORY_LOG=warn,victory_gpu::host=info   # fps lines in the log
+```
+
+Then run: `victory.exe run <game folder> --execute --console series-s`
 
 ## Safety notes
 
